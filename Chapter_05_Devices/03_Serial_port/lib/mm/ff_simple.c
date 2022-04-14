@@ -1,8 +1,8 @@
 /*!  Dynamic memory allocator - first fit */
 
+#include <kernel/kprint.h>
 #define _FF_SIMPLE_C_
 #include <lib/ff_simple.h>
-
 #ifndef ASSERT
 #include ASSERT_H
 #endif
@@ -15,6 +15,7 @@
 */
 void *ffs_init(void *mem_segm, size_t size)
 {
+
 	size_t start, end;
 	ffs_hdr_t *chunk, *border;
 	ffs_mpool_t *mpool;
@@ -60,6 +61,7 @@ void *ffs_init(void *mem_segm, size_t size)
  */
 void *ffs_alloc(ffs_mpool_t *mpool, size_t size)
 {
+
 	ffs_hdr_t *iter, *chunk;
 
 	ASSERT(mpool);
@@ -70,7 +72,14 @@ void *ffs_alloc(ffs_mpool_t *mpool, size_t size)
 
 	/* align request size to higher 'size_t' boundary */
 	ALIGN_FW(size);
-
+	kprintf("Free chunks before malloc:\n");
+	iter = mpool->first;
+	int i=0;
+	while (iter != NULL){
+		kprintf("chunk: %d, size: \t-[%d]\n",i,iter->size);
+		iter = iter->next;
+		i++;
+	}
 	iter = mpool->first;
 	while (iter != NULL && iter->size < size)
 		iter = iter->next;
@@ -98,6 +107,15 @@ void *ffs_alloc(ffs_mpool_t *mpool, size_t size)
 	MARK_USED(chunk);
 	CLONE_SIZE_TO_TAIL(chunk);
 
+	kprintf("Free chunks after malloc:\n");
+	iter = mpool->first;
+	i=0;
+	while (iter != NULL){
+		kprintf("chunk: %d, size: \t-[%d]\n",i,iter->size);
+		iter = iter->next;
+		i++;
+	};
+
 	return ((void *) chunk) + sizeof(size_t);
 }
 
@@ -109,7 +127,16 @@ void *ffs_alloc(ffs_mpool_t *mpool, size_t size)
  */
 int ffs_free(ffs_mpool_t *mpool, void *chunk_to_be_freed)
 {
-	ffs_hdr_t *chunk, *before, *after;
+ffs_hdr_t *iter;
+		kprintf("Free chunks before free:\n");
+	iter = mpool->first;
+	int i=0;
+	while (iter != NULL){
+		kprintf("chunk: %d, size: \t-[%d]\n",i,iter->size);
+		iter = iter->next;
+		i++;
+	};
+	ffs_hdr_t *chunk;
 
 	ASSERT(mpool && chunk_to_be_freed);
 
@@ -118,29 +145,20 @@ int ffs_free(ffs_mpool_t *mpool, void *chunk_to_be_freed)
 
 	MARK_FREE(chunk); /* mark it as free */
 
-	/* join with left? */
-	before = ((void *) chunk) - sizeof(size_t);
-	if (CHECK_FREE(before))
-	{
-		before = GET_HDR(before);
-		ffs_remove_chunk(mpool, before);
-		before->size += chunk->size; /* join */
-		chunk = before;
-	}
-
-	/* join with right? */
-	after = GET_AFTER(chunk);
-	if (CHECK_FREE(after))
-	{
-		ffs_remove_chunk(mpool, after);
-		chunk->size += after->size; /* join */
-	}
 
 	/* insert chunk in free list */
 	ffs_insert_chunk(mpool, chunk);
 
 	/* set chunk tail */
 	CLONE_SIZE_TO_TAIL(chunk);
+kprintf("Free chunks after free:\n");
+	iter = mpool->first;
+	i=0;
+	while (iter != NULL){
+		kprintf("chunk: %d, size: \t-[%d]\n",i,iter->size);
+		iter = iter->next;
+		i++;
+	};
 
 	return 0;
 }
@@ -152,6 +170,7 @@ int ffs_free(ffs_mpool_t *mpool, void *chunk_to_be_freed)
  */
 static void ffs_remove_chunk(ffs_mpool_t *mpool, ffs_hdr_t *chunk)
 {
+
 	if (chunk == mpool->first) /* first in list? */
 		mpool->first = chunk->next;
 	else

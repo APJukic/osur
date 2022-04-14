@@ -45,6 +45,8 @@ void *k_mem_init(void *segment, size_t size)
 }
 void *kmalloc(size_t size)
 {
+
+
 	return KMALLOC(size);
 }
 int kfree(void *chunk)
