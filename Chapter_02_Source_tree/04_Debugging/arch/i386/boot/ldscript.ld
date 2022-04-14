@@ -5,40 +5,41 @@
 ENTRY(arch_startup)
 
 SECTIONS {
-	.code LOAD_ADDR :
-	{
-		kernel_code_addr = .;
+	.code 0x0 :
+ 	{
+ 		kernel_code_addr = .;
 
-		/* instructions */
-		*?/boot/startup.asm.o ( .text* )
+ 		/* instructions */
+ 		*?/boot/startup.asm.o ( .text* )
 
-		*( .text* )
+		*?/boot/premjesti.o ( .text* )
 	}
-	.data :
+	.instrukcije 0x200000 : AT(0x100000)
 	{
-		kernel_data_addr = .;
+ 		*( .text* )
+ 	}
+	size_i = SIZEOF(.instrukcije);
+	xxxx = 0x100000;
 
-		/* read only data (constants), initialized global variables */
-		* ( .rodata* .data* )
-	}
-	.bss :
+	.data 0x400000: AT(0x300000)
+ 	{
+ 		kernel_data_addr = .;
+
+ 		/* read only data (constants), initialized global variables */
+ 		* ( .rodata* .data* )
+ 	}
+	size_data = SIZEOF(.data);
+
+	.bss 0x500000: AT(0x450000)
+ 	{
+ 		*( .bss* COMMON* )
+
+ 		. = ALIGN (4096);
+ 	}
+
+	.stog_u_slici 0x600000:
 	{
-		*( .bss* COMMON* )
-
+		*( .stog )
 		. = ALIGN (4096);
 	}
-
-	/*
-	 * what with other sections generated with gcc (various versions)?
-	 * if optimizing for size discard them with: /DISCARD/ : { *(*) }
-	 * if debugging with qemu/gdb they must be included
-	 * - they can be included implicitly, without declaring them here
-	 * - but they will be put behind "kernel_end_addr" so its best to use
-	 *   multiboot loader (QEMU is that)
-	 */
-
-#ifndef DEBUG
-	/DISCARD/ : { *(*) }
-#endif
-	kernel_end_addr = .;
 }
