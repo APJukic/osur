@@ -62,7 +62,7 @@ void *ffs_init(void *mem_segm, size_t size)
 void *ffs_alloc(ffs_mpool_t *mpool, size_t size)
 {
 
-	ffs_hdr_t *iter, *chunk;
+	ffs_hdr_t *iter, *chunk,*after,*before;
 
 	ASSERT(mpool);
 
@@ -84,8 +84,53 @@ void *ffs_alloc(ffs_mpool_t *mpool, size_t size)
 	while (iter != NULL && iter->size < size)
 		iter = iter->next;
 
-	if (iter == NULL)
-		return NULL; /* no adequate free chunk found */
+	if (iter == NULL){
+		kprintf("No adequate free chunk found, time to merge neighbors\n");
+	chunk=mpool->first;
+		before = ((void *) chunk) - sizeof(size_t);
+	while(1){
+		if (CHECK_FREE(before))
+		{
+			before = GET_HDR(before);
+			ffs_remove_chunk(mpool, before);
+			before->size += chunk->size; /* join */
+			chunk = before;
+		}	
+		/* join with right? */
+		after = chunk->next;
+		if(chunk->next==NULL){
+			kprintf("No enough memory!!\n");
+			return NULL;
+		}
+
+		if (chunk->next!=NULL)
+		{
+
+		ffs_remove_chunk(mpool, after);
+		
+		chunk->size += after->size; /* join */
+		if(chunk->next!=NULL)
+		chunk->next=after->next;
+
+		}
+		if (chunk->size >= size)
+			break;
+		}
+		kprintf("After merging chunks are:\n");
+			iter = mpool->first;
+	i=0;
+	while (iter != NULL){
+		kprintf("chunk: %d, size: \t-[%d]\n",i,iter->size);
+		iter = iter->next;
+		i++;
+
+	};
+
+	}
+
+	iter = mpool->first;
+	while (iter != NULL && iter->size < size)
+		iter = iter->next;
 
 	if (iter->size >= size + HEADER_SIZE)
 	{
@@ -159,6 +204,7 @@ kprintf("Free chunks after free:\n");
 		iter = iter->next;
 		i++;
 	};
+	kprintf("\n\n\n");
 
 	return 0;
 }
