@@ -13,8 +13,8 @@
  * \param size Memory pool size
  * \return memory pool descriptor
 */
-int adr_st;
-int adr_end;
+size_t adr_st;
+size_t adr_end;
 
 void *ffs_init(void *mem_segm, size_t size)
 {
@@ -27,9 +27,8 @@ void *ffs_init(void *mem_segm, size_t size)
 	/* align all on 'size_t' (if already not aligned) */
 	start = (size_t) mem_segm;
 	end = start + size;
-
-	adr_st=(int)start;
-	adr_end=(int)end;
+	adr_st=(size_t) mem_segm;
+	adr_end= ((size_t) mem_segm + size)/3;
 
 	ALIGN_FW(start);
 	mpool = (void *) start;		/* place mm descriptor here */
@@ -125,7 +124,7 @@ int ffs_free(ffs_mpool_t *mpool, void *chunk_to_be_freed)
 
 	MARK_FREE(chunk); /* mark it as free */
 	
-	if(!(((int)chunk)>=adr_st && ((int)chunk)<=adr_end)){
+	if(!(((size_t)chunk)>=adr_st && ((size_t)chunk)<= adr_end)){
 	
 	/* join with left? */
 	before = ((void *) chunk) - sizeof(size_t);

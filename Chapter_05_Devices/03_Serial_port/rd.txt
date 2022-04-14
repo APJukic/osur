@@ -1,0 +1,1 @@
+Promjenjen ff_simple.c (dodane dvije globalne varijable adr_st i adr_end i uvjet u ffs_free), treba jos dodati demo.c slicno kao u pripremi za 3 lab.
