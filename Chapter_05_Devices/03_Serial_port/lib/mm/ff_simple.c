@@ -2,7 +2,7 @@
 
 #define _FF_SIMPLE_C_
 #include <lib/ff_simple.h>
-
+#include <kernel/kprint.h>
 #ifndef ASSERT
 #include ASSERT_H
 #endif
@@ -13,6 +13,9 @@
  * \param size Memory pool size
  * \return memory pool descriptor
 */
+int adr_st;
+int adr_end;
+
 void *ffs_init(void *mem_segm, size_t size)
 {
 	size_t start, end;
@@ -24,6 +27,10 @@ void *ffs_init(void *mem_segm, size_t size)
 	/* align all on 'size_t' (if already not aligned) */
 	start = (size_t) mem_segm;
 	end = start + size;
+
+	adr_st=(int)start;
+	adr_end=(int)end;
+
 	ALIGN_FW(start);
 	mpool = (void *) start;		/* place mm descriptor here */
 	start += sizeof(ffs_mpool_t);
@@ -117,7 +124,9 @@ int ffs_free(ffs_mpool_t *mpool, void *chunk_to_be_freed)
 	ASSERT(CHECK_USED(chunk));
 
 	MARK_FREE(chunk); /* mark it as free */
-
+	
+	if(!(((int)chunk)>=adr_st && ((int)chunk)<=adr_end)){
+	
 	/* join with left? */
 	before = ((void *) chunk) - sizeof(size_t);
 	if (CHECK_FREE(before))
@@ -135,7 +144,7 @@ int ffs_free(ffs_mpool_t *mpool, void *chunk_to_be_freed)
 		ffs_remove_chunk(mpool, after);
 		chunk->size += after->size; /* join */
 	}
-
+	}
 	/* insert chunk in free list */
 	ffs_insert_chunk(mpool, chunk);
 

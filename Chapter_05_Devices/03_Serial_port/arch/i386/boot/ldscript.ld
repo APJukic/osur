@@ -27,7 +27,7 @@ SECTIONS {
 
 		. = ALIGN (4096);
 	}
-
+	size_i = SIZEOF(.bss);
 	/*
 	 * what with other sections generated with gcc (various versions)?
 	 * if optimizing for size discard them with: /DISCARD/ : { *(*) }
