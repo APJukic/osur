@@ -11,6 +11,9 @@ static int inc(int n)
 
 	return n;
 }
+const int x=10;
+int y=25;
+int z[100];
 
 int debug()
 {
@@ -33,7 +36,12 @@ int debug()
 
 #if 1	/* compile with 'debug=yes' and without */
 	LOG(WARN, "This is log entry with WARN relevance");
-	LOG(INFO, "Address of 'a' is %x", &a);
+	LOG ( INFO, "Address of 'debug' is %x", debug );
+	LOG ( INFO, "Address of 'x' is %x", &x );
+	LOG ( INFO, "Address of 'y' is %x", &y );
+	LOG ( INFO, "Address of 'z' is %x", z );
+	LOG ( INFO, "Address of 'a' is %x", &a);
+
 
 	ASSERT_ERRNO_AND_RETURN(TRUE, EINVAL);
 

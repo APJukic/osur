@@ -1,25 +1,26 @@
-/*! linker script for memory layout */
-
-/* Its parsed as C before used in linking! */
-
 ENTRY(arch_startup)
 
 SECTIONS {
-	.code LOAD_ADDR :
+	.text :
 	{
-		kernel_code_addr = .;
 
-		/* instructions */
-		*?/boot/startup.asm.o ( .text* )
 
 		*( .text* )
+
+	}
+	.rodata :
+	{
+		kernel_data_addr = .;
+
+		/*read only data (constants)*/
+		* ( .rodata*)
 	}
 	.data :
 	{
 		kernel_data_addr = .;
 
-		/* read only data (constants), initialized global variables */
-		* ( .rodata* .data* )
+		/* initialized global variables */
+		* (.data* )
 	}
 	.bss :
 	{
