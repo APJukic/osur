@@ -14,9 +14,20 @@ static arch_ic_t *icdev = &IC_DEV;
 
 /*! interrupt handlers */
 static list_t ihandlers[INTERRUPTS];
+static list_t zahtjevi;
+
+struct zahtjev
+{
+	uint8 tru;
+	void *device; //struct ihndlr
+	int irq_num;
+	int prio;
+	int (*ihandler) (unsigned int, void *device);
+};
 
 struct ihndlr
 {
+	int prio;
 	void *device;
 	int (*ihandler)(unsigned int, void *device);
 
@@ -48,8 +59,7 @@ void arch_irq_disable(unsigned int irq)
 }
 
 /*! Register handler function for particular interrupt number */
-void arch_register_interrupt_handler(unsigned int inum, void *handler,
-				       void *device)
+ void arch_register_interrupt_handler(unsigned int inum, void *handler, void *device, int prio) 
 {
 	struct ihndlr *ih;
 
@@ -60,6 +70,7 @@ void arch_register_interrupt_handler(unsigned int inum, void *handler,
 
 		ih->device = device;
 		ih->ihandler = handler;
+		ih->prio=prio;
 
 		list_append(&ihandlers[inum], ih, &ih->list);
 	}
@@ -94,9 +105,20 @@ void arch_unregister_interrupt_handler(unsigned int irq_num, void *handler,
  * "Forward" interrupt handling to registered handler
  * (called from interrupts.S)
  */
+
+int cmpa(void *a, void *b){
+	struct zahtjev *a1 = kmalloc(sizeof(struct zahtjev));
+	struct zahtjev *b1 = kmalloc(sizeof(struct zahtjev));
+	a1 = (struct zahtjev *)a;
+	b1 = (struct zahtjev *)b;
+	if ((a1->prio) >= (b1->prio))
+		return 1;
+	else return -1;
+}
 void arch_interrupt_handler(int irq_num)
 {
 	struct ihndlr *ih;
+	list_init(&zahtjevi);
 
 	if (irq_num < INTERRUPTS && (ih = list_get(&ihandlers[irq_num], FIRST)))
 	{
@@ -104,14 +126,40 @@ void arch_interrupt_handler(int irq_num)
 		 * return here immediately */
 		if (icdev->at_exit)
 			icdev->at_exit(irq_num);
-
+		
 		/* Call registered handlers */
 		while (ih)
 		{
-			ih->ihandler(irq_num, ih->device);
+			//ih->ihandler(irq_num, ih->device);
+			struct zahtjev *req = kmalloc(sizeof(struct zahtjev));
+			req->device = ih->device;
+			req->irq_num = irq_num;
+			req->prio = ih->prio;
+			req->ihandler = ih->ihandler;
+			req->tru=1;
+			list_h *tmp = kmalloc(sizeof(list_h));
+			tmp->object = req;
+	
+				list_sort_add(&zahtjevi, req, tmp, cmpa);
 
 			ih = list_get_next(&ih->list);
 		}
+		struct zahtjev *iter = kmalloc(sizeof(struct zahtjev));
+		iter = list_get(&zahtjevi,FIRST);
+
+
+		while (iter && iter->tru)
+		{
+			iter->tru = 0;
+			enable_interrupts();
+			iter->ihandler(iter->prio, iter->device);
+			disable_interrupts();
+			list_remove(&zahtjevi, FIRST, NULL);
+			kfree(iter);
+			iter = list_get(&zahtjevi, FIRST);
+		}
+		//kfree(iter);
+
 	}
 
 	else if (irq_num < INTERRUPTS)

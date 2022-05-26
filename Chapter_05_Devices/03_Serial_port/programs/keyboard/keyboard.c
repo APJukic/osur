@@ -6,7 +6,7 @@
 
 int keyboard()
 {
-	int key;
+	/**int key;
 	timespec_t t = {.tv_sec = 0, .tv_nsec = 100000000};
 
 	printf("Example program: [%s:%s]\n%s\n\n", __FILE__, __FUNCTION__,
@@ -19,7 +19,7 @@ int keyboard()
 			nanosleep(&t, NULL);
 	}
 	while (key != '.');
-
+**/
 	printf("End of keyboard test\n");
 
 	return 0;

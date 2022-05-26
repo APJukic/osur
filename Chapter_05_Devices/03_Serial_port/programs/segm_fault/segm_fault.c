@@ -3,10 +3,66 @@
 #include <stdio.h>
 #include <api/prog_info.h>
 
+/*! Generate segmentation fault */
+
+#include <stdio.h>
+#include <api/prog_info.h>
+#include <api/malloc.h>
+#include <arch/interrupt.h>
+#include <arch/processor.h>
+
+#define TEST	1
 /* detect memory faults(qemu do not detect segment violations!) */
+static int i=0;
+#if TEST == 1
+static void test1(int prio)
+{
+	printf("Interrupt func 1. Number prio=%d\n", prio);
+}
+static void test2(int prio)
+{
+	printf("Interrupt func 2. Number prio=%d\n", prio);
+}
+static void test3(int prio)
+{
+	if(i==0){
+	i++;
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test2,NULL,1);
+	raise_interrupt(SOFTWARE_INTERRUPT);
+	}
+	
+	printf("Interrupt func 3. Number prio=%d\n", prio);
+}
+#endif
 
 int segm_fault()
 {
+#if TEST == 1
+	printf("\nInterrupt test >>>\n");
+	
+
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test1,NULL,3);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test2,NULL,2);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,5);
+
+	raise_interrupt(SOFTWARE_INTERRUPT);
+
+	printf("Interrupt test <<<\n\n");
+
+#elif TEST == 2
+	void *ptr1, *ptr2;
+
+	ptr1 = malloc(1023);
+	printf("malloc returned %x(1023)\n", ptr1);
+
+	ptr2 = malloc(123);
+	printf("malloc returned %x(123)\n", ptr2);
+
+	if (ptr1)
+		free(ptr1);
+	if (ptr2)
+		free(ptr2);
+#else
 	unsigned int *p;
 	unsigned int i, j=0;
 
@@ -15,7 +71,7 @@ int segm_fault()
 
 	printf("Before segmentation fault\n");
 
-	for (i = 2; i < 32; i++)
+	for (i = 16; i < 32; i++)
 	{
 		p = (unsigned int *)(1 << i);
 		printf("[%x]=%d\n", p, *p);
@@ -23,6 +79,6 @@ int segm_fault()
 	}
 
 	printf("After expected segmentation fault, j=%d\n", j);
-
+#endif
 	return 0;
 }

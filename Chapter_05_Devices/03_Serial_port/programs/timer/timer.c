@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <api/prog_info.h>
-
+/**
 static timespec_t t0;
 
 static void alarm_nt(sigval_t param)
@@ -18,10 +18,10 @@ static void alarm_nt(sigval_t param)
 	printf("[%d:%d] Alarm %d(every %d seconds)\n",
 		t.tv_sec, t.tv_nsec/100000000, num, num);
 }
-
+**/
 int timer()
 {
-	timespec_t t;
+	/**timespec_t t;
 	itimerspec_t t1, t2;
 	timer_t timer1, timer2;
 	sigevent_t evp;
@@ -37,7 +37,7 @@ int timer()
 	evp.sigev_notify_function = alarm_nt;
 	evp.sigev_notify_attributes = NULL;
 
-	/* timer1 */
+
 	t1.it_interval.tv_sec = 3;
 	t1.it_interval.tv_nsec = 0;
 	t1.it_value.tv_sec = 3;
@@ -46,7 +46,7 @@ int timer()
 	timer_create(CLOCK_REALTIME, &evp, &timer1);
 	timer_settime(&timer1, 0, &t1, NULL);
 
-	/* timer2 */
+	
 	t2.it_interval.tv_sec = 5;
 	t2.it_interval.tv_nsec = 0;
 	t2.it_value.tv_sec = 5;
@@ -66,7 +66,7 @@ int timer()
 	printf("System time: %d:%d\n", t.tv_sec, t.tv_nsec / 100000000);
 
 	timer_delete(&timer1);
-	timer_delete(&timer2);
+	timer_delete(&timer2);*/
 
 	return 0;
 }
