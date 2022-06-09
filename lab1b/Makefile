@@ -9,7 +9,7 @@ CURR_DIR := \"$(shell pwd)\"
 CFLAGS += -D VAR1=$(VAR1) -D VAR2=$(VAR2) -D CURR_DIR=$(CURR_DIR)
 
 OBJEKTI = main.o
-MODULI = Zagreb/mod-Zagreb.o Split/mod-Split.o 
+MODULI = Zagreb/mod-Zagreb.o Split/mod-Split.o Nadoknada/mod-Nadoknada.o
 
 $(PROGRAM): $(OBJEKTI) $(MODULI)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -27,6 +27,7 @@ $(MODULI):
 brisi:
 	$(MAKE) -C Zagreb brisi
 	$(MAKE) -C Split brisi
+	$(MAKE) -C Nadoknada brisi
 	rm -f $(OBJEKTI) $(PROGRAM)
 
 .PHONY: pokreni

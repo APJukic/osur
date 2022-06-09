@@ -17,6 +17,6 @@ int main ()
 	funkcija_Zagreb (p);
 	funkcija_Split (p);
 	printf("\n");
-
+	nadoknada_lab1();
 	return 0;
 }
