@@ -13,7 +13,7 @@
 
 #define TEST	1
 /* detect memory faults(qemu do not detect segment violations!) */
-static int i=0;
+
 #if TEST == 1
 static void test1(int prio)
 {
@@ -25,11 +25,6 @@ static void test2(int prio)
 }
 static void test3(int prio)
 {
-	if(i==0){
-	i++;
-	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test2,NULL,1);
-	raise_interrupt(SOFTWARE_INTERRUPT);
-	}
 	
 	printf("Interrupt func 3. Number prio=%d\n", prio);
 }
@@ -43,7 +38,20 @@ int segm_fault()
 
 	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test1,NULL,3);
 	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test2,NULL,2);
-	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,5);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,1);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,3);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,2);
+
+	raise_interrupt(SOFTWARE_INTERRUPT);
+
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,1);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,3);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test3,NULL,2);
+	
+	raise_interrupt(SOFTWARE_INTERRUPT);
+	
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test1,NULL,3);
+	arch_register_interrupt_handler(SOFTWARE_INTERRUPT, test2,NULL,2);
 
 	raise_interrupt(SOFTWARE_INTERRUPT);
 

@@ -14,7 +14,9 @@ static arch_ic_t *icdev = &IC_DEV;
 
 /*! interrupt handlers */
 static list_t ihandlers[INTERRUPTS];
+static int size_l; //broj zahtjeva
 static list_t zahtjevi;
+static int i=0;
 
 struct zahtjev
 {
@@ -30,13 +32,14 @@ struct ihndlr
 	int prio;
 	void *device;
 	int (*ihandler)(unsigned int, void *device);
-
+	int irq_num;
 	list_h list;
 };
 
 /*! Initialize interrupt subsystem(in 'arch' layer) */
 void arch_init_interrupts()
 {
+	size_l=0;	
 	int i;
 
 	icdev->init();
@@ -73,11 +76,13 @@ void arch_irq_disable(unsigned int irq)
 		ih->prio=prio;
 
 		list_append(&ihandlers[inum], ih, &ih->list);
+	
 	}
 	else {
 		LOG(ERROR, "Interrupt %d can't be used!\n", inum);
 		halt();
 	}
+	size_l=size_l+1;
 }
 
 /*! Unregister handler function for particular interrupt number */
@@ -126,7 +131,7 @@ void arch_interrupt_handler(int irq_num)
 		 * return here immediately */
 		if (icdev->at_exit)
 			icdev->at_exit(irq_num);
-		
+		if(i==0) size_l-=5;
 		/* Call registered handlers */
 		while (ih)
 		{
@@ -141,24 +146,32 @@ void arch_interrupt_handler(int irq_num)
 			tmp->object = req;
 	
 				list_sort_add(&zahtjevi, req, tmp, cmpa);
-
+			ih->irq_num=irq_num;
 			ih = list_get_next(&ih->list);
 		}
-		struct zahtjev *iter = kmalloc(sizeof(struct zahtjev));
-		iter = list_get(&zahtjevi,FIRST);
+		printf("called interrupt, size of requests  %d \n", size_l);
 
+		if(size_l >= 5){;
+			if (i==0) i++;
+			struct zahtjev *iter = kmalloc(sizeof(struct zahtjev));
+			iter = list_get(&zahtjevi,FIRST);
+			struct ihndlr *ihd;
+			ih = list_get(&ihandlers[irq_num], FIRST);
 
-		while (iter && iter->tru)
-		{
-			iter->tru = 0;
-			enable_interrupts();
-			iter->ihandler(iter->prio, iter->device);
-			disable_interrupts();
-			list_remove(&zahtjevi, FIRST, NULL);
-			kfree(iter);
-			iter = list_get(&zahtjevi, FIRST);
+			while (iter && iter->tru)
+			{
+				iter->tru = 0;
+				enable_interrupts();
+				iter->ihandler(iter->prio, iter->device);
+				list_remove(&ihandlers[ihd->irq_num], FIRST, &ihd->list);
+				disable_interrupts();
+				list_remove(&zahtjevi, FIRST, NULL);
+				kfree(iter);
+				iter = list_get(&zahtjevi, FIRST);
+				ihd = list_get_next(&ih->list);
+			}
+			size_l=0;
 		}
-		//kfree(iter);
 
 	}
 
