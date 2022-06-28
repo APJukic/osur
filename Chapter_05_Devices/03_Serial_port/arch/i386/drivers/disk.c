@@ -5,7 +5,7 @@
 #include <kernel/errno.h>
 #include <lib/string.h>
 
-#define BLOCK_SIZE	512
+#define BLOCK_SIZE	12
 #define BLOCKS		4096
 
 static int init(uint flags, void *params, device_t *dev);

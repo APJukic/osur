@@ -204,11 +204,15 @@ int k_fs_read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 		// fp % block_size > 0
 		// #----|fp|-------#-----------#
 		//         |    size    |
-
+		size_t tmp = 0;
+		int x = (fd->fp)/(ft->block_size);
+		
 		//start with block x where address fd->fp is (x=fp/bsize)
 		//fd->tfd->block[x] has address of block on disk
 		//read that block and copy data from fd->fp to the end of block
-		//DISK_READ(buf, 1, fd->tfd->block[x]);
+		int itr = (size / 12) + 1;
+		DISK_READ(buffer, itr, fd->tfd->block[x]);
+
 		//which part of buf to buffer? ...
 		//read next block ...
 		//stop when all required data is read or end of the file is reached
@@ -217,19 +221,26 @@ int k_fs_read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 		//return number of bytes read
 
 		//char buf[ft->block_size];
-		size_t todo = size;
+		size_t todo = tmp;
 		//size_t block = fd->fp / ft->block_size;
 
-		//todo
 
-		return size - todo;
+		return size-todo;
 	}
 	else {
 		//assume there is enough space on disk
-
 		//write ...
 		//if ...->block[x] == 0 => find free block on disk
+		int x = (fd->fp)/(ft->block_size);
+		printf("%d\n",size);
+		while(fd->tfd->block[x]!=0){
+			x++;
+		}
+		int itr = (size / 12) + 1;
+		DISK_WRITE(buffer, itr, fd->tfd->block[x]);
+
 		//when fp isn't block start, read block from disk first
+		
 		//and then replace fp+ bytes ... and then write block back
 
 		//char buf[ft->block_size];
